@@ -46,5 +46,5 @@ pub enum SpectrumAnalyzerError {
     /// After applying the scaling function on a specific item, the returned value is either
     /// infinity or NaN, according to IEEE-754. This is invalid. Check
     /// your scaling function!
-    ScalingError(f32, f32),
+    ScalingError(f64, f64),
 }

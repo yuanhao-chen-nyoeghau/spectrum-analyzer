@@ -25,7 +25,7 @@ SOFTWARE.
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use core::f32::consts::PI;
+use core::f64::consts::PI;
 
 /// Creates a sine (sinus) wave function for a given frequency.
 /// Don't forget to scale up the value to the audio resolution.
@@ -33,13 +33,13 @@ use core::f32::consts::PI;
 /// of the returned function is the point in time in seconds.
 ///
 /// * `frequency` is in Hertz
-pub fn sine_wave(frequency: f32) -> Box<dyn Fn(f32) -> f32> {
+pub fn sine_wave(frequency: f64) -> Box<dyn Fn(f64) -> f64> {
     Box::new(move |t| (t * frequency * 2.0 * PI).sin())
 }
 
 /// See [`sine_wave_audio_data_multiple`]
 #[allow(dead_code)]
-pub fn sine_wave_audio_data(frequency: f32, sampling_rate: u32, duration_ms: u32) -> Vec<i16> {
+pub fn sine_wave_audio_data(frequency: f64, sampling_rate: u32, duration_ms: u32) -> Vec<i16> {
     sine_wave_audio_data_multiple(&[frequency], sampling_rate, duration_ms)
 }
 
@@ -52,7 +52,7 @@ pub fn sine_wave_audio_data(frequency: f32, sampling_rate: u32, duration_ms: u32
 /// * `sampling_rate` sampling rate, i.e. 44100Hz
 /// * `duration_ms` duration of the audio data in milliseconds
 pub fn sine_wave_audio_data_multiple(
-    frequencies: &[f32],
+    frequencies: &[f64],
     sampling_rate: u32,
     duration_ms: u32,
 ) -> Vec<i16> {
@@ -64,16 +64,16 @@ pub fn sine_wave_audio_data_multiple(
     let sine_waves = frequencies
         .iter()
         .map(|f| sine_wave(*f))
-        .collect::<Vec<Box<dyn Fn(f32) -> f32>>>();
+        .collect::<Vec<Box<dyn Fn(f64) -> f64>>>();
 
     // How many samples to generate with each sine wave function
-    let sample_count = (sampling_rate as f32 * (duration_ms as f32 / 1000.0)) as usize;
+    let sample_count = (sampling_rate as f64 * (duration_ms as f64 / 1000.0)) as usize;
 
     // Calculate the final sine wave
     let mut sine_wave = Vec::with_capacity(sample_count);
     for i_sample in 0..sample_count {
         // t: time
-        let t = (1.0 / sampling_rate as f32) * i_sample as f32;
+        let t = (1.0 / sampling_rate as f64) * i_sample as f64;
 
         // BEGIN: add sine waves
         let mut acc = 0.0;
@@ -84,13 +84,13 @@ pub fn sine_wave_audio_data_multiple(
 
         // BEGIN: scale
         // times 0.1 to prevent to clipping if multiple sinus waves are added above each other
-        let acc = acc * i16::MAX as f32 * 0.1;
+        let acc = acc * i16::MAX as f64 * 0.1;
         // END: scale
 
         // BEGIN: truncate in interval
-        let acc = if acc > i16::MAX as f32 {
+        let acc = if acc > i16::MAX as f64 {
             i16::MAX
-        } else if acc < i16::MIN as f32 {
+        } else if acc < i16::MIN as f64 {
             i16::MIN
         } else {
             acc as i16

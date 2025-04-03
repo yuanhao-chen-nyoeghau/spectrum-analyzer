@@ -69,8 +69,8 @@ fn test_spectrum_and_visualize_sine_waves_50_1000_3777hz() {
 
     let sine_audio = sine_audio
         .into_iter()
-        .map(|x| x as f32)
-        .collect::<Vec<f32>>();
+        .map(|x| x as f64)
+        .collect::<Vec<f64>>();
 
     // FFT frequency accuracy is: sample_rate / (N / 2)
     // 44100/(4096/2) = 21.5Hz
@@ -161,8 +161,8 @@ fn test_spectrum_power() {
 
     let sine_audio = sine_audio
         .into_iter()
-        .map(|x| x as f32)
-        .collect::<Vec<f32>>();
+        .map(|x| x as f64)
+        .collect::<Vec<f64>>();
 
     // FFT frequency accuracy is: sample_rate / (N / 2)
     // 44100/(4096/2) = 21.5Hz
@@ -235,8 +235,8 @@ fn test_spectrum_frequency_limit_inclusive() {
 
     let sine_audio = sine_audio
         .into_iter()
-        .map(|x| x as f32)
-        .collect::<Vec<f32>>();
+        .map(|x| x as f64)
+        .collect::<Vec<f64>>();
 
     // frequency resolution will be:
     // 1024 / 512 = 2 Hz
@@ -271,7 +271,7 @@ fn test_spectrum_frequency_limit_inclusive() {
         );
         assert_eq!(
             spectrum.max_fr().val(),
-            sampling_rate as f32 / 2.0,
+            sampling_rate as f64 / 2.0,
             "Upper bound frequency must be inclusive!"
         );
     }
@@ -338,8 +338,8 @@ fn test_spectrum_nyquist_theorem2() {
         1000,
     )
     .into_iter()
-    .map(|x| x as f32)
-    .collect::<Vec<f32>>();
+    .map(|x| x as f64)
+    .collect::<Vec<f64>>();
     let spectrum = samples_fft_to_spectrum(
         &sine_audio[0..4096],
         44100,
@@ -388,12 +388,12 @@ fn test_spectrum_nyquist_theorem2() {
 #[test]
 fn test_invalid_input() {
     // should not contain NaN
-    let samples = vec![0.0, 1.0, 2.0, 3.0, f32::NAN, 4.0, 5.0, 6.0];
+    let samples = vec![0.0, 1.0, 2.0, 3.0, f64::NAN, 4.0, 5.0, 6.0];
     let err = samples_fft_to_spectrum(&samples, 44100, FrequencyLimit::All, None).unwrap_err();
     assert!(matches!(err, SpectrumAnalyzerError::NaNValuesNotSupported));
 
     // should not contain Infinity
-    let samples = vec![0.0, 1.0, 2.0, 3.0, f32::INFINITY, 4.0, 5.0, 6.0];
+    let samples = vec![0.0, 1.0, 2.0, 3.0, f64::INFINITY, 4.0, 5.0, 6.0];
     let err = samples_fft_to_spectrum(&samples, 44100, FrequencyLimit::All, None).unwrap_err();
     assert!(matches!(
         err,
@@ -436,7 +436,7 @@ fn test_scaling_produces_error() {
         &samples,
         44100,
         FrequencyLimit::All,
-        Some(&|_val, _info| f32::NAN),
+        Some(&|_val, _info| f64::NAN),
     )
     .expect_err("Must throw error due to illegal scaling!");
 }
@@ -446,7 +446,7 @@ fn test_scaling_produces_error() {
 #[cfg_attr(miri, ignore)] // runs forever + no real value add
 fn test_divide_by_n_has_effect() {
     let audio_data = sine_wave_audio_data_multiple(&[100.0, 200.0, 400.0], 1000, 2000);
-    let audio_data = audio_data.into_iter().map(|x| x as f32).collect::<Vec<_>>();
+    let audio_data = audio_data.into_iter().map(|x| x as f64).collect::<Vec<_>>();
     let audio_data = hann_window(&audio_data[0..1024]);
     let normal_spectrum =
         samples_fft_to_spectrum(&audio_data, 1000, FrequencyLimit::All, None).unwrap();

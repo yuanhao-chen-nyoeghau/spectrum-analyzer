@@ -3,11 +3,11 @@ use spectrum_analyzer::{
     samples_fft_to_spectrum, scaling, windows, FrequencyLimit, FrequencySpectrum,
 };
 
-fn spectrum_without_scaling(samples: &[f32]) -> FrequencySpectrum {
+fn spectrum_without_scaling(samples: &[f64]) -> FrequencySpectrum {
     samples_fft_to_spectrum(samples, 44100, FrequencyLimit::All, None).unwrap()
 }
 
-fn spectrum_with_scaling(samples: &[f32]) -> FrequencySpectrum {
+fn spectrum_with_scaling(samples: &[f64]) -> FrequencySpectrum {
     samples_fft_to_spectrum(
         samples,
         44100,
@@ -17,7 +17,7 @@ fn spectrum_with_scaling(samples: &[f32]) -> FrequencySpectrum {
     .unwrap()
 }
 
-fn spectrum_with_multiple_scaling(samples: &[f32]) -> FrequencySpectrum {
+fn spectrum_with_multiple_scaling(samples: &[f64]) -> FrequencySpectrum {
     let mut spectrum = spectrum_with_scaling(samples);
 
     let mut working_buffer = vec![(0.0.into(), 0.0.into()); spectrum.data().len()];
@@ -38,7 +38,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     // create 2048 random samples
     let samples = (0..2048)
         .map(|_| rand::random::<i16>())
-        .map(|x| x as f32)
+        .map(|x| x as f64)
         .collect::<Vec<_>>();
     let hann_window = windows::hann_window(&samples);
 

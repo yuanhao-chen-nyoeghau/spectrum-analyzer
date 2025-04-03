@@ -37,7 +37,7 @@ use alloc::boxed::Box;
 /// This structure can be used to scale each value. All properties reference the
 /// current data of a [`FrequencySpectrum`].
 ///
-/// This uses `f32` in favor of [`FrequencyValue`] because the latter led to
+/// This uses `f64` in favor of [`FrequencyValue`] because the latter led to
 /// some implementation problems.
 ///
 /// [`FrequencySpectrum`]: crate::FrequencySpectrum
@@ -45,16 +45,16 @@ use alloc::boxed::Box;
 #[derive(Debug)]
 pub struct SpectrumDataStats {
     /// Minimal frequency value in spectrum.
-    pub min: f32,
+    pub min: f64,
     /// Maximum frequency value in spectrum.
-    pub max: f32,
+    pub max: f64,
     /// Average frequency value in spectrum.
-    pub average: f32,
+    pub average: f64,
     /// Median frequency value in spectrum.
-    pub median: f32,
-    /// Number of samples (`samples.len()`). Already casted to f32, to avoid
+    pub median: f64,
+    /// Number of samples (`samples.len()`). Already casted to f64, to avoid
     /// repeatedly casting in a loop for each value.
-    pub n: f32,
+    pub n: f64,
 }
 
 /// Describes the type for a function that scales/normalizes the data inside
@@ -74,12 +74,12 @@ pub struct SpectrumDataStats {
 /// or that the result is NaN or Infinity (regarding IEEE-754). If the result
 /// is NaN or Infinity, the library will return `Err`.
 ///
-/// This uses `f32` in favor of [`FrequencyValue`] because the latter led to
+/// This uses `f64` in favor of [`FrequencyValue`] because the latter led to
 /// some implementation problems.
 ///
 /// [`FrequencySpectrum`]: crate::FrequencySpectrum
 /// [`FrequencyValue`]: crate::FrequencyValue
-pub type SpectrumScalingFunction = dyn Fn(f32, &SpectrumDataStats) -> f32;
+pub type SpectrumScalingFunction = dyn Fn(f64, &SpectrumDataStats) -> f64;
 
 /// Calculates the base 10 logarithm of each frequency magnitude and
 /// multiplies it with 20.
@@ -101,7 +101,7 @@ pub type SpectrumScalingFunction = dyn Fn(f32, &SpectrumDataStats) -> f32;
 /// ```
 /// Function is of type [`SpectrumScalingFunction`].
 #[must_use]
-pub fn scale_20_times_log10(fr_val: f32, _stats: &SpectrumDataStats) -> f32 {
+pub fn scale_20_times_log10(fr_val: f64, _stats: &SpectrumDataStats) -> f64 {
     debug_assert!(!fr_val.is_infinite());
     debug_assert!(!fr_val.is_nan());
     debug_assert!(fr_val >= 0.0);
@@ -116,7 +116,7 @@ pub fn scale_20_times_log10(fr_val: f32, _stats: &SpectrumDataStats) -> f32 {
 /// Function is of type [`SpectrumScalingFunction`]. Expects that [`SpectrumDataStats::min`] is
 /// not negative.
 #[must_use]
-pub fn scale_to_zero_to_one(fr_val: f32, stats: &SpectrumDataStats) -> f32 {
+pub fn scale_to_zero_to_one(fr_val: f64, stats: &SpectrumDataStats) -> f64 {
     debug_assert!(!fr_val.is_infinite());
     debug_assert!(!fr_val.is_nan());
     debug_assert!(fr_val >= 0.0);
@@ -131,7 +131,7 @@ pub fn scale_to_zero_to_one(fr_val: f32, stats: &SpectrumDataStats) -> f32 {
 /// by the length of samples, so that values of different samples lengths are comparable.
 #[allow(non_snake_case)]
 #[must_use]
-pub fn divide_by_N(fr_val: f32, stats: &SpectrumDataStats) -> f32 {
+pub fn divide_by_N(fr_val: f64, stats: &SpectrumDataStats) -> f64 {
     debug_assert!(!fr_val.is_infinite());
     debug_assert!(!fr_val.is_nan());
     debug_assert!(fr_val >= 0.0);
@@ -149,7 +149,7 @@ pub fn divide_by_N(fr_val: f32, stats: &SpectrumDataStats) -> f32 {
 /// See <https://docs.rs/rustfft/latest/rustfft/#normalization>
 #[allow(non_snake_case)]
 #[must_use]
-pub fn divide_by_N_sqrt(fr_val: f32, stats: &SpectrumDataStats) -> f32 {
+pub fn divide_by_N_sqrt(fr_val: f64, stats: &SpectrumDataStats) -> f64 {
     debug_assert!(!fr_val.is_infinite());
     debug_assert!(!fr_val.is_nan());
     debug_assert!(fr_val >= 0.0);
@@ -188,13 +188,13 @@ mod tests {
 
     #[test]
     fn test_scale_to_zero_to_one() {
-        let data = vec![0.0_f32, 1.1, 2.2, 3.3, 4.4, 5.5];
+        let data = vec![0.0_f64, 1.1, 2.2, 3.3, 4.4, 5.5];
         let stats = SpectrumDataStats {
             min: data[0],
             max: data[data.len() - 1],
-            average: data.iter().sum::<f32>() / data.len() as f32,
+            average: data.iter().sum::<f64>() / data.len() as f64,
             median: (2.2 + 3.3) / 2.0,
-            n: data.len() as f32,
+            n: data.len() as f64,
         };
         // check that type matches
         let scaling_fn: &SpectrumScalingFunction = &scale_to_zero_to_one;
@@ -202,9 +202,9 @@ mod tests {
             .into_iter()
             .map(|x| scaling_fn(x, &stats))
             .collect::<Vec<_>>();
-        let expected = [0.0_f32, 0.2, 0.4, 0.6, 0.8, 1.0];
+        let expected = [0.0_f64, 0.2, 0.4, 0.6, 0.8, 1.0];
         for (expected_val, actual_val) in expected.iter().zip(scaled_data.iter()) {
-            float_cmp::approx_eq!(f32, *expected_val, *actual_val, ulps = 3);
+            float_cmp::approx_eq!(f64, *expected_val, *actual_val, ulps = 3);
         }
     }
 
@@ -214,7 +214,7 @@ mod tests {
         let _combined_static = combined(&[&scale_20_times_log10, &divide_by_N, &divide_by_N_sqrt]);
 
         // doesn't compile yet.. fix this once someone requests it
-        /*let closure_scaling_fnc = |fr_val: f32, _stats: &SpectrumDataStats| {
+        /*let closure_scaling_fnc = |fr_val: f64, _stats: &SpectrumDataStats| {
            0.0
         };
 

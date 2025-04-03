@@ -54,7 +54,7 @@ pub struct FrequencySpectrum {
     /// Frequency resolution of the examined samples in Hertz,
     /// i.e the frequency steps between elements in the vector
     /// inside field [`Self::data`].
-    frequency_resolution: f32,
+    frequency_resolution: f64,
     /// Number of samples that were analyzed. Might be bigger than the length
     /// of `data`, if the spectrum was created with a [`crate::limit::FrequencyLimit`] .
     samples_len: u32,
@@ -90,7 +90,7 @@ impl FrequencySpectrum {
     #[must_use]
     pub fn new(
         data: Vec<(Frequency, FrequencyValue)>,
-        frequency_resolution: f32,
+        frequency_resolution: f64,
         samples_len: u32,
         working_buffer: &mut [(Frequency, FrequencyValue)],
     ) -> Self {
@@ -141,7 +141,7 @@ impl FrequencySpectrum {
             average: self.average.val(),
             median: self.median.val(),
             // attention! not necessarily `data.len()`!
-            n: self.samples_len as f32,
+            n: self.samples_len as f64,
         };
 
         // Iterate over the whole spectrum and scale each frequency value.
@@ -149,7 +149,7 @@ impl FrequencySpectrum {
         // early return a result here
         for (_fr, fr_val) in &mut self.data {
             // scale value
-            let scaled_val: f32 = scaling_fn(fr_val.val(), &stats);
+            let scaled_val: f64 = scaling_fn(fr_val.val(), &stats);
 
             // sanity check
             if scaled_val.is_nan() || scaled_val.is_infinite() {
@@ -216,7 +216,7 @@ impl FrequencySpectrum {
     /// Returns the frequency resolution of this spectrum.
     #[inline]
     #[must_use]
-    pub const fn frequency_resolution(&self) -> f32 {
+    pub const fn frequency_resolution(&self) -> f64 {
         self.frequency_resolution
     }
 
@@ -295,15 +295,15 @@ impl FrequencySpectrum {
     /// Either exact value of approximated value, determined by [`Self::frequency_resolution`].
     #[inline]
     #[must_use]
-    pub fn freq_val_exact(&self, search_fr: f32) -> FrequencyValue {
+    pub fn freq_val_exact(&self, search_fr: f64) -> FrequencyValue {
         // lowest frequency in the spectrum
         let (min_fr, min_fr_val) = self.data[0];
         // highest frequency in the spectrum
         let (max_fr, max_fr_val) = self.data[self.data.len() - 1];
 
         // https://docs.rs/float-cmp/0.8.0/float_cmp/
-        let equals_min_fr = float_cmp::approx_eq!(f32, min_fr.val(), search_fr, ulps = 3);
-        let equals_max_fr = float_cmp::approx_eq!(f32, max_fr.val(), search_fr, ulps = 3);
+        let equals_min_fr = float_cmp::approx_eq!(f64, min_fr.val(), search_fr, ulps = 3);
+        let equals_max_fr = float_cmp::approx_eq!(f64, max_fr.val(), search_fr, ulps = 3);
 
         // Fast return if possible
         if equals_min_fr {
@@ -339,7 +339,7 @@ impl FrequencySpectrum {
                 continue;
             }
 
-            return if float_cmp::approx_eq!(f32, point_a_x, search_fr, ulps = 3) {
+            return if float_cmp::approx_eq!(f64, point_a_x, search_fr, ulps = 3) {
                 // directly return if possible
                 point_a_y
             } else {
@@ -375,15 +375,15 @@ impl FrequencySpectrum {
     /// Closest matching point in spectrum, determined by [`Self::frequency_resolution`].
     #[inline]
     #[must_use]
-    pub fn freq_val_closest(&self, search_fr: f32) -> (Frequency, FrequencyValue) {
+    pub fn freq_val_closest(&self, search_fr: f64) -> (Frequency, FrequencyValue) {
         // lowest frequency in the spectrum
         let (min_fr, min_fr_val) = self.data[0];
         // highest frequency in the spectrum
         let (max_fr, max_fr_val) = self.data[self.data.len() - 1];
 
         // https://docs.rs/float-cmp/0.8.0/float_cmp/
-        let equals_min_fr = float_cmp::approx_eq!(f32, min_fr.val(), search_fr, ulps = 3);
-        let equals_max_fr = float_cmp::approx_eq!(f32, max_fr.val(), search_fr, ulps = 3);
+        let equals_min_fr = float_cmp::approx_eq!(f64, min_fr.val(), search_fr, ulps = 3);
+        let equals_max_fr = float_cmp::approx_eq!(f64, max_fr.val(), search_fr, ulps = 3);
 
         // Fast return if possible
         if equals_min_fr {
@@ -417,7 +417,7 @@ impl FrequencySpectrum {
                 continue;
             }
 
-            return if float_cmp::approx_eq!(f32, point_a_x.val(), search_fr, ulps = 3) {
+            return if float_cmp::approx_eq!(f64, point_a_x.val(), search_fr, ulps = 3) {
                 // directly return if possible
                 (point_a_x, point_a_y)
             } else {
@@ -440,16 +440,16 @@ impl FrequencySpectrum {
     /// [mel]: https://en.wikipedia.org/wiki/Mel_scale
     #[inline]
     #[must_use]
-    pub fn mel_val(&self, mel_val: f32) -> FrequencyValue {
+    pub fn mel_val(&self, mel_val: f64) -> FrequencyValue {
         let hz = mel_to_hertz(mel_val);
         self.freq_val_exact(hz)
     }
 
     /// Returns a [`BTreeMap`] with all value pairs. The key is of type [`u32`]
-    /// because [`f32`] is not [`Ord`].
+    /// because [`f64`] is not [`Ord`].
     #[inline]
     #[must_use]
-    pub fn to_map(&self) -> BTreeMap<u32, f32> {
+    pub fn to_map(&self) -> BTreeMap<u32, f64> {
         self.data
             .iter()
             .map(|(fr, fr_val)| (fr.val() as u32, fr_val.val()))
@@ -464,7 +464,7 @@ impl FrequencySpectrum {
     /// [mels]: https://en.wikipedia.org/wiki/Mel_scale
     #[inline]
     #[must_use]
-    pub fn to_mel_map(&self) -> BTreeMap<u32, f32> {
+    pub fn to_mel_map(&self) -> BTreeMap<u32, f64> {
         self.data
             .iter()
             .map(|(fr, fr_val)| (hertz_to_mel(fr.val()) as u32, fr_val.val()))
@@ -500,13 +500,13 @@ impl FrequencySpectrum {
         };
 
         // sum of all frequency values
-        let sum: f32 = data_sorted_by_val
+        let sum: f64 = data_sorted_by_val
             .iter()
             .map(|fr_val| fr_val.1.val())
             .fold(0.0, |a, b| a + b);
 
         // average of all frequency values
-        let avg = sum / data_sorted_by_val.len() as f32;
+        let avg = sum / data_sorted_by_val.len() as f64;
         let average: FrequencyValue = avg.into();
 
         // median of all frequency values
@@ -565,10 +565,10 @@ mod math {
     /// y coordinate of searched point C
     #[inline]
     pub fn calculate_y_coord_between_points(
-        (x1, y1): (f32, f32),
-        (x2, y2): (f32, f32),
-        x_coord: f32,
-    ) -> f32 {
+        (x1, y1): (f64, f64),
+        (x2, y2): (f64, f64),
+        x_coord: f64,
+    ) -> f64 {
         // e.g. Points (100, 1.0) and (200, 0.0)
         // y=f(x)=-0.01x + c
         // 1.0 = f(100) = -0.01x + c
@@ -584,13 +584,13 @@ mod math {
     }
 
     /// Converts hertz to [mel](https://en.wikipedia.org/wiki/Mel_scale).
-    pub fn hertz_to_mel(hz: f32) -> f32 {
+    pub fn hertz_to_mel(hz: f64) -> f64 {
         assert!(hz >= 0.0);
         2595.0 * libm::log10f(1.0 + (hz / 700.0))
     }
 
     /// Converts [mel](https://en.wikipedia.org/wiki/Mel_scale) to hertz.
-    pub fn mel_to_hertz(mel: f32) -> f32 {
+    pub fn mel_to_hertz(mel: f64) -> f64 {
         assert!(mel >= 0.0);
         700.0 * (libm::powf(10.0, mel / 2595.0) - 1.0)
     }
@@ -614,7 +614,7 @@ mod math {
             // Must calculate arbitrary point between points by laying a linear function through the
             // two points.
             float_cmp::assert_approx_eq!(
-                f32,
+                f64,
                 0.2,
                 calculate_y_coord_between_points((100.0, 1.0), (200.0, 0.0), 180.0,),
                 ulps = 3
@@ -623,15 +623,15 @@ mod math {
 
         #[test]
         fn test_mel() {
-            float_cmp::assert_approx_eq!(f32, hertz_to_mel(0.0), 0.0, epsilon = 0.1);
-            float_cmp::assert_approx_eq!(f32, hertz_to_mel(500.0), 607.4, epsilon = 0.1);
-            float_cmp::assert_approx_eq!(f32, hertz_to_mel(5000.0), 2363.5, epsilon = 0.1);
+            float_cmp::assert_approx_eq!(f64, hertz_to_mel(0.0), 0.0, epsilon = 0.1);
+            float_cmp::assert_approx_eq!(f64, hertz_to_mel(500.0), 607.4, epsilon = 0.1);
+            float_cmp::assert_approx_eq!(f64, hertz_to_mel(5000.0), 2363.5, epsilon = 0.1);
 
-            let conv = |hz: f32| mel_to_hertz(hertz_to_mel(hz));
+            let conv = |hz: f64| mel_to_hertz(hertz_to_mel(hz));
 
-            float_cmp::assert_approx_eq!(f32, conv(0.0), 0.0, epsilon = 0.1);
-            float_cmp::assert_approx_eq!(f32, conv(1000.0), 1000.0, epsilon = 0.1);
-            float_cmp::assert_approx_eq!(f32, conv(10000.0), 10000.0, epsilon = 0.1);
+            float_cmp::assert_approx_eq!(f64, conv(0.0), 0.0, epsilon = 0.1);
+            float_cmp::assert_approx_eq!(f64, conv(1000.0), 1000.0, epsilon = 0.1);
+            float_cmp::assert_approx_eq!(f64, conv(10000.0), 10000.0, epsilon = 0.1);
         }
     }
 }
@@ -654,7 +654,7 @@ mod tests {
     #[allow(clippy::cognitive_complexity)]
     fn test_spectrum_basic() {
         let spectrum = vec![
-            (0.0_f32, 5.0_f32),
+            (0.0_f64, 5.0_f64),
             (50.0, 50.0),
             (100.0, 100.0),
             (150.0, 150.0),
@@ -750,7 +750,7 @@ mod tests {
             assert_eq!(200.0 - 0.0, spectrum.range().val(), "range() must work");
             assert_eq!(80.55556, spectrum.average().val(), "average() must work");
             assert_eq!(
-                (50 + 100) as f32 / 2.0,
+                (50 + 100) as f64 / 2.0,
                 spectrum.median().val(),
                 "median() must work"
             );
@@ -798,7 +798,7 @@ mod tests {
     #[should_panic]
     fn test_spectrum_get_frequency_value_exact_panic_below_min() {
         let mut spectrum_vector = vec![
-            (0.0_f32.into(), 5.0_f32.into()),
+            (0.0_f64.into(), 5.0_f64.into()),
             (450.0.into(), 200.0.into()),
         ];
 
@@ -817,7 +817,7 @@ mod tests {
     #[should_panic]
     fn test_spectrum_get_frequency_value_exact_panic_below_max() {
         let mut spectrum_vector = vec![
-            (0.0_f32.into(), 5.0_f32.into()),
+            (0.0_f64.into(), 5.0_f64.into()),
             (450.0.into(), 200.0.into()),
         ];
 
@@ -836,7 +836,7 @@ mod tests {
     #[should_panic]
     fn test_spectrum_get_frequency_value_closest_panic_below_min() {
         let mut spectrum_vector = vec![
-            (0.0_f32.into(), 5.0_f32.into()),
+            (0.0_f64.into(), 5.0_f64.into()),
             (450.0.into(), 200.0.into()),
         ];
 
@@ -854,7 +854,7 @@ mod tests {
     #[should_panic]
     fn test_spectrum_get_frequency_value_closest_panic_below_max() {
         let mut spectrum_vector = vec![
-            (0.0_f32.into(), 5.0_f32.into()),
+            (0.0_f64.into(), 5.0_f64.into()),
             (450.0.into(), 200.0.into()),
         ];
 
@@ -883,43 +883,43 @@ mod tests {
         );
 
         assert_ne!(
-            f32::NAN,
+            f64::NAN,
             spectrum.min().1.val(),
             "NaN is not valid, must be 0.0!"
         );
         assert_ne!(
-            f32::NAN,
+            f64::NAN,
             spectrum.max().1.val(),
             "NaN is not valid, must be 0.0!"
         );
         assert_ne!(
-            f32::NAN,
+            f64::NAN,
             spectrum.average().val(),
             "NaN is not valid, must be 0.0!"
         );
         assert_ne!(
-            f32::NAN,
+            f64::NAN,
             spectrum.median().val(),
             "NaN is not valid, must be 0.0!"
         );
 
         assert_ne!(
-            f32::INFINITY,
+            f64::INFINITY,
             spectrum.min().1.val(),
             "INFINITY is not valid, must be 0.0!"
         );
         assert_ne!(
-            f32::INFINITY,
+            f64::INFINITY,
             spectrum.max().1.val(),
             "INFINITY is not valid, must be 0.0!"
         );
         assert_ne!(
-            f32::INFINITY,
+            f64::INFINITY,
             spectrum.average().val(),
             "INFINITY is not valid, must be 0.0!"
         );
         assert_ne!(
-            f32::INFINITY,
+            f64::INFINITY,
             spectrum.median().val(),
             "INFINITY is not valid, must be 0.0!"
         );
@@ -986,7 +986,7 @@ mod tests {
     #[test]
     fn test_mel_getter() {
         let mut spectrum_vector = vec![
-            (0.0_f32.into(), 5.0_f32.into()),
+            (0.0_f64.into(), 5.0_f64.into()),
             (450.0.into(), 200.0.into()),
         ];
 

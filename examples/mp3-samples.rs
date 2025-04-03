@@ -83,7 +83,7 @@ fn example__bass_drum_sample() {
     // next smaller power of two is: 2^14 == 16384 => FFT needs power of 2
     let (samples, sampling_rate) =
         read_mp3_to_mono("test/samples/bass_drum_with_high-hat_at_end-sample.mp3");
-    let samples = samples.into_iter().map(|x| x as f32).collect::<Vec<f32>>();
+    let samples = samples.into_iter().map(|x| x as f64).collect::<Vec<f64>>();
 
     to_spectrum_and_plot(
         &samples[0..4096],
@@ -99,7 +99,7 @@ fn example__clap_beat_sample() {
     // we have 44100samples/s*0,379s == 16714 samples
     // next smaller power of two is: 2^14 == 16384 => FFT needs power of 2
     let (samples, sampling_rate) = read_mp3_to_mono("test/samples/clap-beat-sample.mp3");
-    let samples = samples.into_iter().map(|x| x as f32).collect::<Vec<f32>>();
+    let samples = samples.into_iter().map(|x| x as f64).collect::<Vec<f64>>();
 
     to_spectrum_and_plot(
         &samples[0..4096],
@@ -115,7 +115,7 @@ fn example__high_hat_sample() {
     // we have 44100samples/s*0,149s == 6571 samples
     // next smaller power of two is: 2^12 == 4096 => FFT needs power of 2
     let (samples, sampling_rate) = read_mp3_to_mono("test/samples/high-hat-sample.mp3");
-    let samples = samples.into_iter().map(|x| x as f32).collect::<Vec<f32>>();
+    let samples = samples.into_iter().map(|x| x as f64).collect::<Vec<f64>>();
 
     to_spectrum_and_plot(
         &samples[0..4096],
@@ -128,7 +128,7 @@ fn example__high_hat_sample() {
 // Calculates spectrum via FFT for a given set of samples and applies
 // all window functions + plots all
 fn to_spectrum_and_plot(
-    samples: &[f32],
+    samples: &[f64],
     sampling_rate: u32,
     filename: &str,
     frequency_limit: FrequencyLimit,
@@ -282,7 +282,7 @@ fn read_mp3_to_mono(file: &str) -> (Vec<i16>, u32) {
                     for (i, sample) in samples_of_frame.iter().enumerate().step_by(2) {
                         let sample = *sample as i32;
                         let next_sample = samples_of_frame[i + 1] as i32;
-                        mono_samples.push(((sample + next_sample) as f32 / 2.0) as i16);
+                        mono_samples.push(((sample + next_sample) as f64 / 2.0) as i16);
                     }
                 } else if channels == 1 {
                     mono_samples.extend_from_slice(&samples_of_frame);

@@ -69,7 +69,7 @@ impl FftImpl {
     ///              point number (no NaN or infinite) and the length must be
     ///              a power of two. Otherwise, the function panics.
     #[inline]
-    pub(crate) fn calc(samples: &[f32]) -> Vec<Complex32> {
+    pub(crate) fn calc(samples: &[f64]) -> Vec<Complex32> {
         assert_eq!(
             samples.len() % 2,
             0,

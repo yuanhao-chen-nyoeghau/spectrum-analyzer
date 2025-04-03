@@ -38,7 +38,7 @@ fn main() {
     let visualize_spectrum: RefCell<Vec<(f64, f64)>> = RefCell::new(vec![(0.0, 0.0); 1024]);
 
     // Closure that captures `visualize_spectrum`.
-    let to_spectrum_fn = move |audio: &[f32], sampling_rate| {
+    let to_spectrum_fn = move |audio: &[f64], sampling_rate| {
         let skip_elements = audio.len() - 2048;
         // spectrum analysis only of the latest 46ms
         let relevant_samples = &audio[skip_elements..skip_elements + 2048];
@@ -64,8 +64,8 @@ fn main() {
                 *fr_old = fr_new.val() as f64;
                 let old_val = *fr_val_old * 0.84;
                 let max = max(
-                    *fr_val_new * 5000.0_f32.into(),
-                    FrequencyValue::from(old_val as f32),
+                    *fr_val_new * 5000.0_f64.into(),
+                    FrequencyValue::from(old_val as f64),
                 );
                 *fr_val_old = max.val() as f64;
             });

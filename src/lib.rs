@@ -111,7 +111,7 @@ mod tests;
 /// the FFT algorithm, except that complex numbers are transformed
 /// to their magnitude.
 ///
-/// * `samples` raw audio, e.g. 16bit audio data but as f32.
+/// * `samples` raw audio, e.g. 16bit audio data but as f64.
 ///             You should apply a window function (like Hann) on the data first.
 ///             The final frequency resolution is `sample_rate / (N / 2)`
 ///             e.g. `44100/(16384/2) == 5.383Hz`, i.e. more samples =>
@@ -154,7 +154,7 @@ mod tests;
 /// ## Panics
 /// * When `samples.len()` isn't a power of two less than or equal to `16384` and `microfft` is used
 pub fn samples_fft_to_spectrum(
-    samples: &[f32],
+    samples: &[f64],
     sampling_rate: u32,
     frequency_limit: FrequencyLimit,
     scaling_fn: Option<&SpectrumScalingFunction>,
@@ -173,7 +173,7 @@ pub fn samples_fft_to_spectrum(
     if !samples.len().is_power_of_two() {
         return Err(SpectrumAnalyzerError::SamplesLengthNotAPowerOfTwo);
     }
-    let max_detectable_frequency = sampling_rate as f32 / 2.0;
+    let max_detectable_frequency = sampling_rate as f64 / 2.0;
     // verify frequency limit: unwrap error or else ok
     frequency_limit
         .verify(max_detectable_frequency)
@@ -186,7 +186,7 @@ pub fn samples_fft_to_spectrum(
     // FFT result has same length as input
     // (but when we interpret the result, we don't need all indices)
 
-    // applies the f32 samples onto the FFT algorithm implementation
+    // applies the f64 samples onto the FFT algorithm implementation
     // chosen at compile time (via Cargo feature).
     // If a complex FFT implementation was chosen, this will internally
     // transform all data to Complex numbers.
@@ -273,8 +273,8 @@ fn fft_result_to_spectrum(
                 // frequency step/resolution is for example: 1/2048 * 44100 = 21.53 Hz
                 //                                             2048 samples, 44100 sample rate
                 //
-                // equal to: 1.0 / samples_len as f32 * sampling_rate as f32
-                fft_index as f32 * frequency_resolution,
+                // equal to: 1.0 / samples_len as f64 * sampling_rate as f64
+                fft_index as f64 * frequency_resolution,
                 // in this .map() step we do nothing with this yet
                 fft_result,
             )
@@ -306,7 +306,7 @@ fn fft_result_to_spectrum(
         // FFT result is always complex: calc magnitude
         //   sqrt(re*re + im*im) (re: real part, im: imaginary part)
         .map(|(fr, complex_res)| (fr, complex_to_magnitude(complex_res)))
-        // transform to my thin convenient orderable f32 wrappers
+        // transform to my thin convenient orderable f64 wrappers
         .map(|(fr, val)| (Frequency::from(fr), FrequencyValue::from(val)))
         // collect all into a sorted vector (from lowest frequency to highest)
         .collect::<Vec<(Frequency, FrequencyValue)>>();
@@ -346,17 +346,17 @@ fn fft_result_to_spectrum(
 /// * <https://www.researchgate.net/post/How-can-I-define-the-frequency-resolution-in-FFT-And-what-is-the-difference-on-interpreting-the-results-between-high-and-low-frequency-resolution>
 /// * <https://stackoverflow.com/questions/4364823/>
 #[inline]
-fn fft_calc_frequency_resolution(sampling_rate: u32, samples_len: u32) -> f32 {
-    sampling_rate as f32 / samples_len as f32
+fn fft_calc_frequency_resolution(sampling_rate: u32, samples_len: u32) -> f64 {
+    sampling_rate as f64 / samples_len as f64
 }
 
-/// Maps a [`Complex32`] to its magnitude as `f32`. This is done by calculating
+/// Maps a [`Complex32`] to its magnitude as `f64`. This is done by calculating
 /// `sqrt(re*re + im*im)`. This is required to convert the complex FFT results
 /// back to real values.
 ///
 /// ## Parameters
 /// * `val` A single value from the FFT output buffer of type [`Complex32`].
-fn complex_to_magnitude(val: &Complex32) -> f32 {
+fn complex_to_magnitude(val: &Complex32) -> f64 {
     // calculates sqrt(re*re + im*im), i.e. magnitude of complex number
     let sum = val.re * val.re + val.im * val.im;
     let sqrt = libm::sqrtf(sum);

@@ -21,47 +21,47 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-//! Module for the struct [`OrderableF32`] and the two
+//! Module for the struct [`Orderablef64`] and the two
 //! convenient type definitions [`Frequency`] and [`FrequencyValue`].
 
 use core::cmp::Ordering;
 use core::fmt::{Display, Formatter, Result};
 use core::ops::{Add, Div, Mul, Sub};
 
-/// A frequency in Hertz. A convenient wrapper type around `f32`.
-pub type Frequency = OrderableF32;
+/// A frequency in Hertz. A convenient wrapper type around `f64`.
+pub type Frequency = Orderablef64;
 /// The value of a [`Frequency`] in a frequency spectrum. Also called the
 /// magnitude.
-pub type FrequencyValue = OrderableF32;
+pub type FrequencyValue = Orderablef64;
 
-/// Wrapper around [`f32`] that guarantees a valid number, hence, the number is
+/// Wrapper around [`f64`] that guarantees a valid number, hence, the number is
 /// neither `NaN` or `infinite`. This makes the number orderable and sortable.
 #[derive(Debug, Copy, Clone, Default)]
-pub struct OrderableF32(f32);
+pub struct Orderablef64(f64);
 
-impl OrderableF32 {
+impl Orderablef64 {
     #[inline]
-    pub const fn val(&self) -> f32 {
+    pub const fn val(&self) -> f64 {
         self.0
     }
 }
 
-impl From<f32> for OrderableF32 {
+impl From<f64> for Orderablef64 {
     #[inline]
-    fn from(val: f32) -> Self {
+    fn from(val: f64) -> Self {
         debug_assert!(!val.is_nan(), "NaN-values are not supported!");
         debug_assert!(!val.is_infinite(), "Infinite-values are not supported!");
         Self(val)
     }
 }
 
-impl Display for OrderableF32 {
+impl Display for Orderablef64 {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl Ord for OrderableF32 {
+impl Ord for Orderablef64 {
     #[inline]
     fn cmp(&self, other: &Self) -> Ordering {
         if self.val() < other.val() {
@@ -74,16 +74,16 @@ impl Ord for OrderableF32 {
     }
 }
 
-impl Eq for OrderableF32 {}
+impl Eq for Orderablef64 {}
 
-impl PartialEq for OrderableF32 {
+impl PartialEq for Orderablef64 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         matches!(self.cmp(other), Ordering::Equal)
     }
 }
 
-impl PartialOrd for OrderableF32 {
+impl PartialOrd for Orderablef64 {
     #[allow(clippy::float_cmp)]
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -91,7 +91,7 @@ impl PartialOrd for OrderableF32 {
     }
 }
 
-impl Add for OrderableF32 {
+impl Add for Orderablef64 {
     type Output = Self;
 
     #[inline]
@@ -100,7 +100,7 @@ impl Add for OrderableF32 {
     }
 }
 
-impl Sub for OrderableF32 {
+impl Sub for Orderablef64 {
     type Output = Self;
 
     #[inline]
@@ -109,7 +109,7 @@ impl Sub for OrderableF32 {
     }
 }
 
-impl Mul for OrderableF32 {
+impl Mul for Orderablef64 {
     type Output = Self;
 
     #[inline]
@@ -118,7 +118,7 @@ impl Mul for OrderableF32 {
     }
 }
 
-impl Div for OrderableF32 {
+impl Div for Orderablef64 {
     type Output = Self;
 
     #[inline]
@@ -135,9 +135,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_orderablef32() {
-        let f1: OrderableF32 = (2.0_f32).into();
-        let f2: OrderableF32 = (-7.0_f32).into();
+    fn test_orderablef64() {
+        let f1: Orderablef64 = (2.0_f64).into();
+        let f2: Orderablef64 = (-7.0_f64).into();
 
         let f3 = f1 + f2;
         let f4 = f1 - f2;
